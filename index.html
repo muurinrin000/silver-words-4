@@ -1,1 +1,1266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
 
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+>
+
+<title>場所の英単語をおぼえよう</title>
+
+<style>
+:root{
+  --bg1:#fff8df;
+  --bg2:#eaf8ff;
+  --card:#ffffff;
+  --main:#ffb703;
+  --accent:#fb8500;
+  --sky:#8ecae6;
+  --text:#263044;
+  --muted:#607089;
+  --line:#dcecf4;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,
+body{
+  margin:0;
+  width:100%;
+  min-height:100%;
+  overscroll-behavior:none;
+}
+
+html,
+body,
+button{
+  touch-action:manipulation;
+}
+
+body{
+  background:linear-gradient(180deg,var(--bg1),var(--bg2));
+  color:var(--text);
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Hiragino Sans",
+    "Yu Gothic",
+    sans-serif;
+}
+
+/* 全体を画面内に収める */
+.app{
+  width:100%;
+  max-width:520px;
+  min-height:100vh;
+  min-height:100dvh;
+  margin:0 auto;
+  padding:
+    max(8px, env(safe-area-inset-top))
+    12px
+    max(8px, env(safe-area-inset-bottom));
+
+  display:flex;
+  flex-direction:column;
+}
+
+/* ヘッダー */
+.header{
+  position:relative;
+  flex-shrink:0;
+  text-align:center;
+  padding:2px 44px 6px;
+}
+
+.settings-open{
+  position:absolute;
+  top:0;
+  right:0;
+
+  width:42px;
+  height:42px;
+
+  border:0;
+  border-radius:50%;
+  background:#edf6f9;
+
+  font-size:21px;
+  cursor:pointer;
+}
+
+.badge{
+  display:inline-block;
+  padding:5px 12px;
+
+  background:var(--main);
+  border-radius:999px;
+
+  font-size:12px;
+  font-weight:900;
+}
+
+h1{
+  margin:5px 0 2px;
+  font-size:21px;
+  line-height:1.25;
+}
+
+.lead{
+  margin:0;
+  color:var(--muted);
+  font-size:12px;
+}
+
+/* 問題数 */
+.progress-area{
+  flex-shrink:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:5px 4px 7px;
+
+  font-size:16px;
+  font-weight:900;
+}
+
+.mode-label{
+  font-size:14px;
+}
+
+/* 単語カード */
+.card{
+  flex:1;
+  min-height:0;
+
+  padding:12px 14px;
+
+  background:var(--card);
+  border:4px solid var(--main);
+  border-radius:26px;
+  box-shadow:0 7px 20px rgba(0,0,0,.08);
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  overflow:hidden;
+}
+
+.icon{
+  margin-bottom:6px;
+
+  font-size:88px;
+  line-height:1;
+
+  user-select:none;
+  cursor:pointer;
+}
+
+.english{
+  font-size:31px;
+  line-height:1.15;
+  font-weight:900;
+  color:#156082;
+
+  text-align:center;
+  overflow-wrap:anywhere;
+  cursor:pointer;
+}
+
+.japanese{
+  margin-top:4px;
+
+  font-size:23px;
+  line-height:1.2;
+  font-weight:900;
+
+  text-align:center;
+}
+
+.sound-btn{
+  width:100%;
+  max-width:340px;
+  min-height:54px;
+
+  margin-top:12px;
+  padding:8px 12px;
+
+  border:0;
+  border-radius:20px;
+
+  background:var(--sky);
+  color:var(--text);
+
+  font-size:19px;
+  font-weight:900;
+
+  box-shadow:0 5px 0 #5f9fbd;
+  cursor:pointer;
+}
+
+.sound-btn:active{
+  transform:translateY(4px);
+  box-shadow:0 1px 0 #5f9fbd;
+}
+
+.sound-btn.speaking{
+  animation:pulse .65s infinite alternate;
+}
+
+/* 前へ・次へ */
+.navigation{
+  flex-shrink:0;
+
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+
+  margin-top:8px;
+}
+
+.nav-btn{
+  min-height:50px;
+  padding:8px;
+
+  border:0;
+  border-radius:18px;
+
+  font-size:17px;
+  font-weight:900;
+
+  cursor:pointer;
+}
+
+.prev-btn{
+  background:#edf6f9;
+  color:var(--text);
+}
+
+.next-btn{
+  background:var(--accent);
+  color:#fff;
+}
+
+.nav-btn:active{
+  transform:scale(.98);
+}
+
+/* シャッフル */
+.shuffle-btn{
+  flex-shrink:0;
+
+  width:100%;
+  min-height:40px;
+
+  margin-top:7px;
+  padding:7px;
+
+  border:0;
+  border-radius:15px;
+
+  background:rgba(255,255,255,.85);
+  color:var(--muted);
+
+  font-size:14px;
+  font-weight:900;
+
+  cursor:pointer;
+}
+
+/* 設定画面の背景 */
+.settings-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:998;
+
+  background:rgba(38,48,68,.38);
+}
+
+.settings-overlay.active{
+  display:block;
+}
+
+/* 保護者設定 */
+.settings-sheet{
+  display:none;
+
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:999;
+
+  max-height:86vh;
+  max-height:86dvh;
+
+  padding:
+    18px
+    16px
+    max(18px, env(safe-area-inset-bottom));
+
+  overflow-y:auto;
+
+  background:#fff;
+  border-radius:28px 28px 0 0;
+  box-shadow:0 -8px 30px rgba(0,0,0,.2);
+}
+
+.settings-sheet.active{
+  display:block;
+}
+
+.settings-head{
+  position:sticky;
+  top:-18px;
+  z-index:2;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  margin:-2px 0 14px;
+  padding:4px 0 8px;
+
+  background:#fff;
+}
+
+.settings-head h2{
+  margin:0;
+  font-size:22px;
+}
+
+.settings-close{
+  width:40px;
+  height:40px;
+
+  border:0;
+  border-radius:50%;
+
+  background:#edf6f9;
+
+  font-size:23px;
+  font-weight:900;
+
+  cursor:pointer;
+}
+
+.settings-description{
+  margin:0 0 12px;
+
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.55;
+}
+
+.setting-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+
+  margin-bottom:12px;
+}
+
+.setting-actions button{
+  min-height:44px;
+
+  border:0;
+  border-radius:15px;
+
+  background:#ffbf32;
+  color:var(--text);
+
+  font-size:15px;
+  font-weight:900;
+
+  cursor:pointer;
+}
+
+.word-checks{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.word-check{
+  display:flex;
+  align-items:flex-start;
+  gap:7px;
+
+  min-height:58px;
+  padding:9px;
+
+  background:#fff8df;
+  border:2px solid #f3d28a;
+  border-radius:15px;
+
+  font-size:13px;
+  font-weight:900;
+
+  cursor:pointer;
+}
+
+.word-check input{
+  width:20px;
+  height:20px;
+
+  margin:0;
+  flex-shrink:0;
+}
+
+.word-check span{
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+
+.setting-option{
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  margin-top:14px;
+  padding:12px;
+
+  background:#edf6f9;
+  border-radius:15px;
+
+  font-size:14px;
+  font-weight:900;
+
+  cursor:pointer;
+}
+
+.setting-option input{
+  width:21px;
+  height:21px;
+  flex-shrink:0;
+}
+
+.save-settings{
+  width:100%;
+  min-height:53px;
+
+  margin-top:15px;
+
+  border:0;
+  border-radius:18px;
+
+  background:var(--main);
+  color:var(--text);
+
+  font-size:17px;
+  font-weight:900;
+
+  cursor:pointer;
+}
+
+.settings-error{
+  min-height:20px;
+  margin-top:8px;
+
+  color:#e76f51;
+  font-size:14px;
+  font-weight:900;
+
+  text-align:center;
+}
+
+/* アニメーション */
+@keyframes pulse{
+  from{
+    transform:scale(1);
+  }
+
+  to{
+    transform:scale(1.035);
+  }
+}
+
+.card-change{
+  animation:cardChange .22s;
+}
+
+@keyframes cardChange{
+  from{
+    opacity:.3;
+    transform:translateX(12px);
+  }
+
+  to{
+    opacity:1;
+    transform:translateX(0);
+  }
+}
+
+/* 画面が低い端末向け */
+@media (max-height:740px){
+  .app{
+    padding-top:5px;
+    padding-bottom:5px;
+  }
+
+  .header{
+    padding-bottom:3px;
+  }
+
+  .badge{
+    padding:4px 10px;
+    font-size:11px;
+  }
+
+  h1{
+    margin:3px 0 1px;
+    font-size:19px;
+  }
+
+  .lead{
+    font-size:11px;
+  }
+
+  .progress-area{
+    padding:3px 4px 5px;
+    font-size:15px;
+  }
+
+  .card{
+    padding:8px 12px;
+    border-radius:23px;
+  }
+
+  .icon{
+    margin-bottom:3px;
+    font-size:74px;
+  }
+
+  .english{
+    font-size:27px;
+  }
+
+  .japanese{
+    font-size:20px;
+  }
+
+  .sound-btn{
+    min-height:48px;
+    margin-top:8px;
+    font-size:17px;
+  }
+
+  .navigation{
+    margin-top:6px;
+  }
+
+  .nav-btn{
+    min-height:44px;
+    font-size:16px;
+  }
+
+  .shuffle-btn{
+    min-height:36px;
+    margin-top:5px;
+  }
+}
+
+/* 横幅の狭い端末向け */
+@media (max-width:380px){
+  .header{
+    padding-left:40px;
+    padding-right:40px;
+  }
+
+  h1{
+    font-size:19px;
+  }
+
+  .icon{
+    font-size:78px;
+  }
+
+  .english{
+    font-size:28px;
+  }
+
+  .japanese{
+    font-size:21px;
+  }
+
+  .word-checks{
+    grid-template-columns:1fr;
+  }
+}
+
+  .sound-row{
+  width:100%;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:14px;
+}
+
+.sound-btn{
+  min-height:54px;
+}
+
+.slow-btn{
+  background:#dff5d8;
+  box-shadow:0 5px 0 #7fb56d;
+}
+
+.slow-btn:active{
+  transform:translateY(4px);
+  box-shadow:0 1px 0 #7fb56d;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <header class="header">
+
+    <button
+      id="settingsOpen"
+      class="settings-open"
+      type="button"
+      aria-label="保護者向け設定を開く"
+    >
+      ⚙️
+    </button>
+
+    <span class="badge">英検Jr.向け</span>
+
+    <h1>🏙️ 場所の英単語をおぼえよう</h1>
+
+    <p class="lead">
+      絵と音を見ながら、ゆっくり覚えよう
+    </p>
+
+  </header>
+
+  <div class="progress-area">
+
+    <span id="counter">
+      1 / 24
+    </span>
+
+    <span class="mode-label">
+      ⭐ おぼえるモード
+    </span>
+
+  </div>
+
+  <main id="card" class="card">
+
+    <div id="icon" class="icon">
+      🍽️
+    </div>
+
+    <div id="english" class="english">
+      restaurant
+    </div>
+
+    <div id="japanese" class="japanese">
+      レストラン
+    </div>
+
+<div class="sound-row">
+
+  <button
+    id="soundBtn"
+    class="sound-btn"
+    type="button"
+  >
+    🔊 ふつう
+  </button>
+
+  <button
+    id="slowBtn"
+    class="sound-btn slow-btn"
+    type="button"
+  >
+    🐢 ゆっくり
+  </button>
+
+</div>
+
+  </main>
+
+  <div class="navigation">
+
+    <button
+      id="prevBtn"
+      class="nav-btn prev-btn"
+      type="button"
+    >
+      ◀ まえ
+    </button>
+
+    <button
+      id="nextBtn"
+      class="nav-btn next-btn"
+      type="button"
+    >
+      つぎ ▶
+    </button>
+
+  </div>
+
+  <button
+    id="shuffleBtn"
+    class="shuffle-btn"
+    type="button"
+  >
+    🔀 順番をまぜる
+  </button>
+
+</div>
+
+<!-- 設定画面の背景 -->
+<div
+  id="settingsOverlay"
+  class="settings-overlay"
+></div>
+
+<!-- 保護者向け設定 -->
+<section
+  id="settingsSheet"
+  class="settings-sheet"
+  aria-label="保護者向け設定"
+>
+
+  <div class="settings-head">
+
+    <h2>
+      ⚙️ 保護者向け設定
+    </h2>
+
+    <button
+      id="settingsClose"
+      class="settings-close"
+      type="button"
+      aria-label="設定を閉じる"
+    >
+      ×
+    </button>
+
+  </div>
+
+  <p class="settings-description">
+    お子さまに覚えてほしい単語を選んでください。
+    設定内容は、このブラウザに保存されます。
+  </p>
+
+  <div class="setting-actions">
+
+    <button
+      id="selectAllBtn"
+      type="button"
+    >
+      すべて選択
+    </button>
+
+    <button
+      id="clearAllBtn"
+      type="button"
+    >
+      すべて外す
+    </button>
+
+  </div>
+
+  <div
+    id="wordChecks"
+    class="word-checks"
+  ></div>
+
+  <label class="setting-option">
+
+    <input
+      id="autoSpeakCheck"
+      type="checkbox"
+      checked
+    >
+
+    「つぎ」へ進んだら英語を自動再生する
+
+  </label>
+
+  <button
+    id="saveSettingsBtn"
+    class="save-settings"
+    type="button"
+  >
+    保存してはじめる
+  </button>
+
+  <div
+    id="settingsError"
+    class="settings-error"
+  ></div>
+
+</section>
+
+<script>
+const originalWords = [
+  { icon:"🏠", en:"house", jp:"家" },
+  { icon:"🏰", en:"castle", jp:"城" },
+  { icon:"🌉", en:"bridge", jp:"橋" },
+  { icon:"📚", en:"library", jp:"図書館" },
+  { icon:"🏫", en:"school", jp:"学校" },
+  { icon:"🎬", en:"movie theater", jp:"映画館" },
+  { icon:"👮", en:"police station", jp:"警察署" },
+  { icon:"📖", en:"bookstore", jp:"本屋" },
+  { icon:"🏬", en:"department store", jp:"デパート" },
+  { icon:"🖼️", en:"art museum", jp:"美術館" },
+  { icon:"🏪", en:"convenience store", jp:"コンビニ" },
+  { icon:"🚒", en:"fire station", jp:"消防署" },
+  { icon:"🚆", en:"train station", jp:"電車の駅" }
+];
+
+const STORAGE_KEY = "placeWordCardSettings";
+
+let words = originalWords.slice();
+let currentIndex = 0;
+let autoSpeak = true;
+
+const $ = id => document.getElementById(id);
+
+/* 配列をシャッフル */
+function shuffle(array){
+  const copied = array.slice();
+
+  for(let i = copied.length - 1; i > 0; i--){
+    const randomIndex =
+      Math.floor(Math.random() * (i + 1));
+
+    [copied[i], copied[randomIndex]] =
+      [copied[randomIndex], copied[i]];
+  }
+
+  return copied;
+}
+
+/* カードを表示 */
+function renderCard(){
+  if(words.length === 0){
+    return;
+  }
+
+  if(currentIndex >= words.length){
+    currentIndex = 0;
+  }
+
+  const current = words[currentIndex];
+
+  $("icon").textContent = current.icon;
+  $("english").textContent = current.en;
+  $("japanese").textContent = current.jp;
+
+  $("counter").textContent =
+    (currentIndex + 1) + " / " + words.length;
+
+  $("prevBtn").disabled = currentIndex === 0;
+
+  $("prevBtn").style.opacity =
+    currentIndex === 0 ? ".45" : "1";
+
+  if(currentIndex === words.length - 1){
+    $("nextBtn").textContent =
+      "最初にもどる ↻";
+  }else{
+    $("nextBtn").textContent =
+      "つぎ ▶";
+  }
+
+  $("card").classList.remove("card-change");
+
+  requestAnimationFrame(() => {
+    $("card").classList.add("card-change");
+  });
+}
+
+/* 英語音声を選択 */
+function getEnglishVoice(){
+  const voices = speechSynthesis.getVoices();
+
+  return (
+    voices.find(voice =>
+      voice.name.includes("Samantha")
+    ) ||
+    voices.find(voice =>
+      voice.name.includes("Karen")
+    ) ||
+    voices.find(voice =>
+      voice.lang === "en-US"
+    ) ||
+    voices.find(voice =>
+      voice.lang.startsWith("en")
+    )
+  );
+}
+
+/* 現在の英単語を英語→日本語の順で読み上げる */
+function speakCurrentWord(rate = 0.78, activeButton = $("soundBtn")){
+  if(!("speechSynthesis" in window)){
+    alert(
+      "このブラウザは音声読み上げに対応していません。"
+    );
+    return;
+  }
+
+  if(words.length === 0){
+    return;
+  }
+
+  const current = words[currentIndex];
+
+  speechSynthesis.cancel();
+
+  $("soundBtn").classList.remove("speaking");
+  $("slowBtn").classList.remove("speaking");
+
+  /* 英語音声 */
+  const english =
+    new SpeechSynthesisUtterance(current.en);
+
+  english.lang = "en-US";
+  english.rate = rate;
+  english.pitch = 1.0;
+  english.volume = 1;
+
+  const englishVoice = getEnglishVoice();
+
+  if(englishVoice){
+    english.voice = englishVoice;
+  }
+
+  /* 日本語音声 */
+ const japanese =
+  new SpeechSynthesisUtterance(current.speak || current.jp);
+
+  japanese.lang = "ja-JP";
+  japanese.rate = 0.9;
+  japanese.pitch = 1.0;
+  japanese.volume = 1;
+
+  english.onstart = () => {
+    activeButton.classList.add("speaking");
+  };
+
+  /* 英語が終わった0.3秒後に日本語を再生 */
+  english.onend = () => {
+    setTimeout(() => {
+      speechSynthesis.speak(japanese);
+    }, 300);
+  };
+
+  japanese.onend = () => {
+    activeButton.classList.remove("speaking");
+  };
+
+  english.onerror = () => {
+    activeButton.classList.remove("speaking");
+  };
+
+  japanese.onerror = () => {
+    activeButton.classList.remove("speaking");
+  };
+
+  speechSynthesis.speak(english);
+}
+/* ふつうの速さ */
+function speakNormal(){
+  speakCurrentWord(0.78, $("soundBtn"));
+}
+
+/* ゆっくり */
+function speakSlow(){
+  speakCurrentWord(0.40, $("slowBtn"));
+}
+
+/* 自動再生 */
+function speakAfterMove(){
+  if(!autoSpeak){
+    return;
+  }
+
+  setTimeout(() => {
+    speakCurrentWord();
+  }, 180);
+}
+
+/* 次へ */
+function showNext(){
+  if(currentIndex < words.length - 1){
+    currentIndex++;
+  }else{
+    currentIndex = 0;
+  }
+
+  renderCard();
+  speakAfterMove();
+}
+
+/* 前へ */
+function showPrevious(){
+  if(currentIndex === 0){
+    return;
+  }
+
+  currentIndex--;
+
+  renderCard();
+  speakAfterMove();
+}
+
+/* 保存設定を読み込む */
+function loadSettings(){
+  const defaultSettings = {
+    selectedIndexes:
+      originalWords.map((_, index) => index),
+
+    autoSpeak:true
+  };
+
+  try{
+    const saved =
+      localStorage.getItem(STORAGE_KEY);
+
+    if(!saved){
+      return defaultSettings;
+    }
+
+    const parsed = JSON.parse(saved);
+
+    let selectedIndexes =
+      Array.isArray(parsed.selectedIndexes)
+        ? parsed.selectedIndexes.filter(index =>
+            Number.isInteger(index) &&
+            index >= 0 &&
+            index < originalWords.length
+          )
+        : defaultSettings.selectedIndexes;
+
+    if(selectedIndexes.length === 0){
+      selectedIndexes =
+        defaultSettings.selectedIndexes;
+    }
+
+    return {
+      selectedIndexes:selectedIndexes,
+      autoSpeak:parsed.autoSpeak !== false
+    };
+
+  }catch(error){
+    console.warn(
+      "設定の読み込みに失敗しました。",
+      error
+    );
+
+    return defaultSettings;
+  }
+}
+
+/* 設定画面のチェックボックスを作る */
+function buildSettings(){
+  const savedSettings = loadSettings();
+  const selectedIndexes =
+    savedSettings.selectedIndexes;
+
+  $("wordChecks").innerHTML = "";
+
+  originalWords.forEach((word, index) => {
+    const label =
+      document.createElement("label");
+
+    label.className = "word-check";
+
+    const checkbox =
+      document.createElement("input");
+
+    checkbox.type = "checkbox";
+    checkbox.className = "word-checkbox";
+    checkbox.value = String(index);
+    checkbox.checked =
+      selectedIndexes.includes(index);
+
+    const text =
+      document.createElement("span");
+
+    text.textContent =
+      word.icon +
+      " " +
+      word.jp +
+      " / " +
+      word.en;
+
+    label.appendChild(checkbox);
+    label.appendChild(text);
+
+    $("wordChecks").appendChild(label);
+  });
+
+  $("autoSpeakCheck").checked =
+    savedSettings.autoSpeak;
+}
+
+/* 保存済みの設定をゲームに反映 */
+function applySavedSettings(){
+  const savedSettings = loadSettings();
+
+  words = savedSettings.selectedIndexes
+    .map(index => originalWords[index])
+    .filter(Boolean);
+
+  autoSpeak = savedSettings.autoSpeak;
+  currentIndex = 0;
+
+  renderCard();
+}
+
+/* 設定を開く */
+function openSettings(){
+  buildSettings();
+
+  $("settingsError").textContent = "";
+
+  $("settingsSheet")
+    .classList.add("active");
+
+  $("settingsOverlay")
+    .classList.add("active");
+
+  if("speechSynthesis" in window){
+    speechSynthesis.cancel();
+  }
+}
+
+/* 設定を閉じる */
+function closeSettings(){
+  $("settingsSheet")
+    .classList.remove("active");
+
+  $("settingsOverlay")
+    .classList.remove("active");
+}
+
+/* 音声関連 */
+$("soundBtn").onclick = speakNormal;
+$("slowBtn").onclick = speakSlow;
+$("icon").onclick = speakNormal;
+$("english").onclick = speakNormal;
+  
+/* 移動ボタン */
+$("nextBtn").onclick = showNext;
+$("prevBtn").onclick = showPrevious;
+
+/* シャッフル */
+$("shuffleBtn").onclick = () => {
+  words = shuffle(words);
+  currentIndex = 0;
+
+  renderCard();
+  speakAfterMove();
+};
+
+/* 設定画面 */
+$("settingsOpen").onclick = openSettings;
+$("settingsClose").onclick = closeSettings;
+$("settingsOverlay").onclick = closeSettings;
+
+/* すべて選択 */
+$("selectAllBtn").onclick = () => {
+  document
+    .querySelectorAll(".word-checkbox")
+    .forEach(checkbox => {
+      checkbox.checked = true;
+    });
+
+  $("settingsError").textContent = "";
+};
+
+/* すべて外す */
+$("clearAllBtn").onclick = () => {
+  document
+    .querySelectorAll(".word-checkbox")
+    .forEach(checkbox => {
+      checkbox.checked = false;
+    });
+};
+
+/* 設定を保存 */
+$("saveSettingsBtn").onclick = () => {
+  const selectedIndexes = Array
+    .from(
+      document.querySelectorAll(
+        ".word-checkbox:checked"
+      )
+    )
+    .map(checkbox =>
+      Number(checkbox.value)
+    );
+
+  if(selectedIndexes.length === 0){
+    $("settingsError").textContent =
+      "最低1つは単語を選んでください。";
+
+    return;
+  }
+
+  const settings = {
+    selectedIndexes:selectedIndexes,
+    autoSpeak:$("autoSpeakCheck").checked
+  };
+
+  try{
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(settings)
+    );
+
+  }catch(error){
+    console.warn(
+      "設定を保存できませんでした。",
+      error
+    );
+  }
+
+  words = selectedIndexes
+    .map(index => originalWords[index])
+    .filter(Boolean);
+
+  autoSpeak = settings.autoSpeak;
+  currentIndex = 0;
+
+  closeSettings();
+  renderCard();
+
+  if(autoSpeak){
+    setTimeout(() => {
+      speakCurrentWord();
+    }, 250);
+  }
+};
+
+/* 音声一覧を読み込む */
+if("speechSynthesis" in window){
+  speechSynthesis.getVoices();
+
+  speechSynthesis.onvoiceschanged = () => {
+    speechSynthesis.getVoices();
+  };
+}
+
+/* 初期表示 */
+applySavedSettings();
+</script>
+
+</body>
+</html>
